@@ -1,0 +1,9 @@
+img{
+    max-width: 100%;
+}
+
+html{font-size:16px}
+@media (min-width:376px) and (max-width:414px){html{font-size:19px}}
+@media (min-width:640px) and (max-width:719px){html{font-size:18px}}
+@media (min-width:720px) and (max-width:749px){html{font-size:17px}}
+@media (min-width:800px){html{font-size:16px}}

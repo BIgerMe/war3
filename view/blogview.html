@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>玲の百草园</title>
+    <link rel="icon" href="http://head.xxroom.xyz/FnUQ7IFfcrP6i0XVHtDdJ5vLwhdV" type="image/x-icon">
+    <link rel="shortcut icon" href="http://head.xxroom.xyz/FnUQ7IFfcrP6i0XVHtDdJ5vLwhdV" type="image/x-icon">
+    <script type="text/javascript" src="../assets/js/Common.js"></script>
+
+    <link rel="stylesheet" href="/assets/editormd/css/editormd.css" />
+    <script src="/assets/editormd/lib/marked.min.js"></script>
+    <script src="/assets/editormd/lib/prettify.min.js"></script>
+    <script src="/assets/editormd/lib/raphael.min.js"></script>
+    <script src="/assets/editormd/lib/underscore.min.js"></script>
+    <script src="/assets/editormd/lib/sequence-diagram.min.js"></script>
+    <script src="/assets/editormd/lib/flowchart.min.js"></script>
+    <script src="/assets/editormd/lib/jquery.flowchart.min.js"></script>
+    <script src="/assets/editormd/editormd.js"></script>
+</head>
+<style type="text/css">
+    .replyinfo>ul{
+        padding-left: 0px;
+        font-family: "Droid Serif",Georgia,"Times New Roman","PingFang SC","Hiragino Sans GB","Source Han Sans CN","WenQuanYi Micro Hei","Microsoft Yahei",serif;
+        color: #999;
+        font-size: .8em;
+    }
+    .card-body{
+        border-bottom: 1px solid #eee;
+    }
+    .truenameIcon, .createdIcon{
+        margin:0 8px 0 0;
+        display: inline;
+    }
+    .createdIcon{
+        padding-left: 12px;
+        border-left: 1px solid #EEE
+    }
+</style>
+<body>
+<div class="mainHeader" style="height:60px;">
+<nav class="navbar fixed-top navbar-expand-lg navbar-light" style="font-weight:600;background-image:url('http://head.xxroom.xyz/Fmyh0wc_H97Wpjydm4Y2jgCKft1y')">
+    <a class="navbar-brand" href="javascript:gohome()">
+        <img style="width:150px;height: 40px" src="../assets/images/xxroom-dark.png">
+    </a>
+<!--    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">-->
+<!--        <span class="navbar-toggler-icon"></span>-->
+<!--    </button>-->
+
+    <!--<div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <form class="form-inline mr-auto my-2 my-lg-0">
+            &lt;!&ndash;            <input class="form-control mr-sm-2" type="search" placeholder="Key" aria-label="Search">&ndash;&gt;
+            &lt;!&ndash;            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>&ndash;&gt;
+        </form>
+    </div>-->
+</nav>
+</div>
+<div class="row" style="margin: 3vh 0 0 0;">
+    <div class="col-lg-10 col-12 offset-lg-1">
+        <div class="detailContent"></div>
+    </div>
+    <div class="col-lg-1 offset-lg-11 offset-10 col-2 d-none d-lg-block" style="position:fixed;">
+        <button class="btn btn-sm btn-light left" style="font-size:25px;border: 0px;box-shadow:0 0 0 0 " onclick="javascript:window.scrollTo(0,0);">
+            <img style="width: 25px" src="/assets/images/icons/arrow-bar-up.svg">
+        </button>
+    </div>
+</div>
+</body>
+</html>
+<script type="text/javascript">
+    $(function(){
+        let id = getQueryVariable('id');
+        showDetail(id);
+    })
+    function gohome(){
+        window.location.href = 'index.html';
+    }
+    function showDetail(id){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {'id':id},
+            url: "/web/blog/publicDetail",
+            async: true,
+            success: function (result) {
+                if(result.error == 0){
+                    let html =  "<div class='col-md-12 text-center'>\n" +
+                        "            <h2><b>"+result.data.data.title+"</b></h2>\n" +
+                        "        </div><br/><br/>"
+                    html += "<div id='detailContent'><textarea style='display:none;'>"+result.data.data.original_content+"</textarea></div>";
+                    let comment_body = "";
+                    $.each(result.data.comment,function(){
+                        comment_body += "<div class='card-body'>\n" +
+                            "            <div class='row'>\n" +
+                            "                <div class='col-lg-1 col-1' style='text-align: center;padding:0'>\n" +
+                            "                    <img style='width:100%;max-width:48px' class='rounded-circle' src='"+this.avatar+"'>\n" +
+                            "                </div>\n" +
+                            "                <div class='col-lg-11 col-11'>\n" +
+                            "                    <div class='replyinfo'>\n" +
+                            "                        <ul>\n" +
+                            "                            <li class='truenameIcon'>昵称: "+this.nickname+"</li>\n" +
+                            "                            <li class='createdIcon'>时间: "+this.created_at+"</li>\n" +
+                            "                        </ul>\n" +
+                            "                    </div>\n" +
+                            "                    <div class=''>"+this.content+"</div>\n" +
+                            "                </div>\n" +
+                            "            </div>\n" +
+                            "        </div>"
+                    })
+                    let comment_add = "<div class='card-body'>\n" +
+                        "            <form action='' method='post'>\n" +
+                        "                <textarea id='firstComment' class='form-control' rows='4'></textarea>\n" +
+                        "                <div class='text-center'>\n" +
+                        "                    <button type='button' class='btn btn-secondary btn-sm' onclick='addComment()' style='margin-top:10px'>评论</button>\n" +
+                        "                </div>\n" +
+                        "            </form>\n" +
+                        "        </div>";
+                    let comment_content = "<div class='card'>\n" +
+                        "        <div class='card-header'>\n" +
+                        "            评论\n" +
+                        "        </div>"+ comment_add + comment_body + "</div>"
+                    html += comment_content;
+                    $("div.detailContent").empty();
+                    $("div.detailContent").append(html);
+                    editormd.markdownToHTML("detailContent",{
+                        htmlDecode      : "style,script,iframe",
+                        // emoji           : true,
+                        // taskList        : true,
+                        // tex             : true,  // 默认不解析
+                        // flowChart       : true,  // 默认不解析
+                        // sequenceDiagram : true  // 默认不解析
+                    })
+                    $("div.detailContent").data("id",id)
+                    $("title").html(result.data.data.title);
+                    // editorInit('firstComment')
+                }
+            }
+        });
+    }
+    /*评论*/
+    function addComment(){
+        let blog_id = $("div.detailContent").data("id");
+        let content = $("#firstComment").val();
+        if(!blog_id){
+            alert('无法评论！')
+            return false;
+        }
+        if(content == '' || content==undefined){
+            alert('评论不能为空');
+            return false;
+        }
+        $.ajax({
+            type:"post",
+            url:'/web/qa/addComment',
+            data:{"blog_id":blog_id,"content":content},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async:true,
+            dataType:"json",
+            success:function(result){
+                if(result.error == 0){
+                    alert(result.msg);
+                    showDetail(blog_id);
+                }else{
+                    alert(result.msg);
+                }
+            }
+        })
+    }
+</script>

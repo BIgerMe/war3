@@ -1,0 +1,133 @@
+<div class="card text-center">
+    <div class="card-header">
+        注册
+    </div>
+    <div class="card-body">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" >邮箱</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Email" autocomplete="off" id="email" aria-describedby="addon-wrapping">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" >昵称</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Nickname" id="nickname" aria-describedby="addon-wrapping">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" >密码</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Password" id="password" autocomplete="new-password"  aria-describedby="addon-wrapping">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" >确认密码</span>
+            </div>
+            <input type="password" class="form-control" placeholder="Confirm Password" id="passwordCfm" autocomplete="new-password"  aria-describedby="addon-wrapping">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" >邮箱验证码</span>
+            </div>
+            <input type="text" class="form-control" id="code" autocomplete="off">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" id="sendCode" onclick="javascript:sendCode()">点击发送</button>
+            </div>
+        </div>
+        <a href="javascript:register()" class="btn-sm btn-outline-secondary">注册</a>
+        <a href="javascript:gologin()" class="btn-sm btn-outline-secondary">登录</a>
+    </div>
+</div>
+
+<script>
+    /*注册*/
+    function register() {
+        let username = $("#email").val();
+        let nickname = $("#nickname").val();
+        let password = $("#password").val();
+        let passwordCfm = $("#passwordCfm").val();
+        let code = $("#code").val();
+        let usernameCheck = username_check(username);
+        if(usernameCheck == false){
+            alert('账号格式不正确');
+            return;
+        }
+        if(nickname.length < 1){
+            alert('昵称不能为空');
+            return;
+        }
+        if(password.length < 6){
+            alert('密码不能小于6位');
+            return;
+        }
+        if(passwordCfm != password){
+            alert('密码不一致');
+            return;
+        }
+        $.ajax({
+            type: "post",
+            dataType: "json",
+            data: {'username':username,'password':password,'nickname':nickname,'code':code},
+            url: "/web/user/sign_up",
+            async: true,
+            success: function (result) {
+                alert(result.msg);
+                if(result.error == 0){
+                    window.localStorage.setItem('token',result.data.token);
+                    goinfo();
+                }
+            }
+        });
+    }
+    /*发送邮箱验证码*/
+    function sendCode() {
+        let email = $("#email").val();
+        if(!email)
+            alert("请先填写邮箱");
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {email:email},
+            url: "/web/user/send_email_code",
+            async: true,
+            success: function (result) {
+                alert(result.msg);
+                if(result.error == 0){
+                    let time = 60;
+                    let timer = null;
+                    timer = setInterval(function(){///开启定时器。函数内执行
+                        $("#sendCode").attr('disabled','true');
+                        $("#sendCode")[0].innerText = time+"秒后重新发送";    //点击发生后，按钮的文本内容变成之前定义好的时间值。
+                        time--;//时间值自减
+                        if(time ==0){     //判断,当时间值小于等于0的时候
+                            $("#sendCode")[0].innerText = '重新发送验证码'; //其文本内容变成……点击重新发送……
+                            $("#sendCode").removeAttr('disabled');
+                            clearInterval(timer); //清除定时器
+                        }
+                    },1000)
+
+                }
+            }
+        });
+    }
+
+    /*用户名校验*/
+    function username_check(username)
+    {
+        //手机号
+        var mobile = /^1[34578]\d{9}$/;
+        //邮箱  xx@xx.xx xx@xx.xx.xx
+        var email = /^\w+(\.\w+)*@\w+(\.\w+){1,2}$/
+        console.log(username);
+        console.log(email.exec(username));
+        console.log(mobile.exec(username));
+
+        if(mobile.exec(username) || email.exec(username)){
+            return true;
+        }else{
+            return false;
+        }
+    }
+</script>

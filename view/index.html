@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?4daf4d895f7c2f8d8227e980166a63b4";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>玲の百草园</title>
+    <link rel="icon" href="http://head.xxroom.xyz/FnUQ7IFfcrP6i0XVHtDdJ5vLwhdV" type="image/x-icon">
+    <link rel="shortcut icon" href="http://head.xxroom.xyz/FnUQ7IFfcrP6i0XVHtDdJ5vLwhdV" type="image/x-icon">
+    <script type="text/javascript" src="../assets/js/Common.js"></script>
+</head>
+<body>
+<div class="mainHeader" style="height: 60px"></div>
+
+<div class="mainContent"></div>
+</body>
+</html>
+
+
+
+<div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center" style="position: fixed; top:300px;right:0;min-height: 200px;">
+    <div id="xTip" style="position: absolute;width: 300px; top: 0; right: 0;">
+    </div>
+</div>
+
+<script type="text/javascript" charset="utf-8"  src="../assets/js/lib/L2Dwidget.0.min.js"></script>
+<script type="text/javascript" charset="utf-8"  src="../assets/js/lib/L2Dwidget.min.js"></script>
+<script type="text/javascript">
+    let screenWidth = document.body.clientWidth;
+    let width = screenWidth > 912 ? 100 : 50;
+    let height = width * 2;
+    L2Dwidget.init({
+        "model": {
+            jsonPath: "https://unpkg.com/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json",  //萌娘
+            "scale": 1
+        },
+        "display": {
+            "position": "right",
+            "width": width,
+            "height": height,
+            "hOffset": 0,
+            "vOffset": -20
+        },
+        "mobile": {
+            "show": true,
+            "scale": 0.5
+        },
+        "react": {
+            "opacityDefault": 1,
+            "opacityOnHover": 0.2
+        }
+    });
+    $(".mainHeader").load('header.html');
+
+    let page = getIndexPage() ? getIndexPage() : 'homepage.html';
+
+    $(".mainContent").load(page);
+    xTips('欢迎~，您可以通过15716197390联系站长')
+    removeToast();
+
+</script>

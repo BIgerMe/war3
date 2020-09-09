@@ -1,0 +1,146 @@
+<script type="text/javascript" src="/assets/js/lib/marked.js"></script>
+<link rel="stylesheet" href="//apps.bdimg.com/libs/jqueryui/1.10.4/css/jquery-ui.min.css">
+<script src="//apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+<style type="text/css">
+    #md,#html{
+        height:500px;
+        min-height: 500px;
+        overflow:hidden;
+    }
+    #md{
+        resize: none;
+    }
+    #html{
+        border: solid 1px darkgrey;
+        border-radius: 5px;
+    }
+    .input-sm {
+        height: 30px;
+        width:300px;
+        padding: 5px 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        border-radius: 3px;
+    }
+    .row{
+        margin: 20px 10px 20px 10px;
+    }
+    .input {
+        padding-bottom: 20px;
+    }
+</style>
+<div class="row">
+    <div class="col-12 input">
+        <span><b>标题:</b></span>&nbsp;&nbsp;&nbsp;
+        <input class="input-sm" id="title" type="text" placeholder="title" autocomplete="off" />
+    </div>
+    <div class="col-12 input">
+        <span><b>标签:</b></span>&nbsp;&nbsp;&nbsp;
+        <input class="input-sm" id="category" type="text" placeholder="category" />
+        <span style="color: #ff420f">&emsp;多个分类以半角'逗号'隔开,如: php,java(最多两个标签,每个标签不超过12个字母或不超过6个汉字)</span>
+    </div>
+    <div class="col-md-12 input">
+        <span><b>分类:</b></span>&nbsp;&nbsp;&nbsp;
+        <select id="tag" class="form-control input-sm" style="width: 160px;display: inline">
+            <option value="0">博客</option>
+            <option value="1">问答</option>
+        </select>
+    </div>
+    <div class="col-md-12">
+        <span><b>内容</b>(Markdown):</span>
+    </div>
+    <div class="col-lg-6 col-12">
+        <textarea id="md" class="form-control"  placeholder="请输入Markdown代码"></textarea>
+    </div>
+    <div id="html" class="col-lg-6 hidden-xs"></div>
+
+    <div class="col-md-12 text-center" style="margin-top: 20px">
+        <button type="button" class="btn btn-primary" onclick="submit()">提交</button>&nbsp;&nbsp;&nbsp;
+        <button type="button" class="btn btn-secondary" onclick="window.location.href = '/blog/index';">取消</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        //自动显示
+        let availableTags = ["ActionScript", "AppleScript", "Asp", "BASIC", "C", "C++", "Clojure", "COBOL", "ColdFusion", "Erlang", "Fortran", "Groovy", "Haskell", "Java", "JavaScript", "Lisp", "Perl", "PHP", "Python", "Ruby", "Scala", "Scheme"];
+        function split( val ) {
+            return val.split( /,\s*/ );
+        }
+        function extractLast( term ) {
+            return split( term ).pop();
+        }
+
+        // 当选择一个条目时不离开文本域
+        $("#category")
+            .bind( "keydown", function( event ) {
+                if ( event.keyCode === $.ui.keyCode.TAB &&
+                    $( this ).data( "ui-autocomplete" ).menu.active ) {
+                    event.preventDefault();
+                }
+            })
+            .autocomplete({
+                minLength: 0,
+                source: function( request, response ) {
+                    // 回到 autocomplete，但是提取最后的条目
+                    response( $.ui.autocomplete.filter(
+                        availableTags, extractLast( request.term ) ) );
+                },
+                focus: function() {
+                    // 防止在获得焦点时插入值
+                    return false;
+                },
+                select: function( event, ui ) {
+                    var terms = split( this.value );
+                    // 移除当前输入
+                    terms.pop();
+                    // 添加被选项
+                    terms.push( ui.item.value );
+                    // 添加占位符，在结尾添加逗号+空格
+                    terms.push( "" );
+                    this.value = terms.join( "," );
+                    return false;
+                }
+            });
+    });
+
+    $("#md").on("keyup blur",function () {
+        var mdH = $("#md")[0].scrollHeight;
+        var htmlH = $("#html")[0].scrollHeight;
+        var h = mdH > htmlH ? mdH : htmlH ;
+        $("#md").css('height',h + "px");
+        $("#html").css('height', h + "px");
+
+        $('#html').html(marked($("#md").val()));
+    });
+
+    function submit(){
+        let title = $("#title").val();
+        let category = $("#category").val();
+        let content = $("#html").html();
+        let original_content = $("#md").val();
+        let tag = $("#tag").val();
+        $.ajax({
+            type: "post",
+            dataType: "json",
+            url: "/web/blog/addBlog",
+            data: {title:title,category:category,content:content,original_content:original_content,tag:tag},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: true,
+            success: function (result) {
+                console.log(result);
+                if(result.error == 0){
+                    alert(result.msg);
+                    // setTimeout(function(){
+                    //     window.location.href = '/blog/';
+                    // },2000);
+                }else{
+                    alert(result.msg);
+                }
+            }
+        });
+    }
+</script>

@@ -1,0 +1,267 @@
+
+<link rel="stylesheet" href="/assets/editormd/css/editormd.css" />
+<script src="/assets/editormd/lib/marked.min.js"></script>
+<script src="/assets/editormd/lib/prettify.min.js"></script>
+<script src="/assets/editormd/lib/raphael.min.js"></script>
+<script src="/assets/editormd/lib/underscore.min.js"></script>
+<script src="/assets/editormd/lib/sequence-diagram.min.js"></script>
+<script src="/assets/editormd/lib/flowchart.min.js"></script>
+<script src="/assets/editormd/lib/jquery.flowchart.min.js"></script>
+<script src="/assets/editormd/editormd.js"></script>
+
+<style type="text/css">
+    @media (min-width: 992px) {
+        .categoryStyle,.listsStyle,.toolStyle{
+            position:fixed;
+        }
+    }
+</style>
+
+<div class="row" style="margin: 3vh 0 0 0 ">
+    <div class="d-sm-none d-none"  id="ListSwitch" style="position: fixed;opacity: 0.5;z-index: 1000">
+        <button class="btn btn-sm btn-secondary" onclick="javaScript:OpenList()">打开列表</button>
+    </div>
+    <div class="col-lg-1 col-3 categoryStyle cateItem d-none d-lg-block" style="overflow: scroll;height:90%">
+        <div class="category"></div>
+    </div>
+    <div class="col-lg-2 offset-lg-1 col-12 listsStyle listItem" style="overflow: scroll;height:90%">
+        <div class="lists"></div>
+    </div>
+    <div class="col-lg-8 offset-lg-3 col-12 detailItem">
+        <div class="detail"></div>
+    </div>
+    <div class="col-lg-1 offset-lg-11 toolStyle d-none d-md-block">
+        <button class="btn btn-sm btn-light left hidden-sm" id="shrink" style="font-size:25px;border: 0px;box-shadow:0 0 0 0 " onclick="javascript:shrink(this);">
+            <img style="width:22px" title="全屏收缩" src="/assets/images/icons/arrows-fullscreen.svg">
+        </button>
+        <button class="btn btn-sm btn-light left hidden-sm" style="font-size:25px;border: 0px;box-shadow:0 0 0 0 " onclick="javascript:window.scrollTo(0,0);">
+            <img style="width: 25px" title="返回顶部" src="/assets/images/icons/arrow-bar-up.svg">
+        </button>
+    </div>
+</div>
+
+<script>
+    $(function(){
+        category();
+        lists();
+        detail();
+    })
+    /*显示博客列表*/
+    function showLists(categoryTitle='',page=1,limit=10){
+        let key = $("#key").val();
+        let private = $("#private").val();
+
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {'key':key,'private':private,'categoryTitle':categoryTitle,'page':page,'limit':limit},
+            url: "/web/blog/personalLists",
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: true,
+            success: function (result) {
+                if(result.error == 0){
+                    let html = '<div id="pagination"></div>\n';
+                    $.each(result.data.data,function(){
+                        let private = (this.private == 0) ? '私有' : '公开';
+                        let tag = (this.tag == 0) ? 'blog' : this.tag == 1 ? 'qa' : 'other';
+                        let category_html = '';
+                        let href_html = this.private == 0 ? "" : "<button class='btn btn-default btn-sm'><a href='blogview.html?id="+this.id+"' target='_blank'><img src='../assets/images/icons/cursor.svg' alt='查看' width='15' height='15' title='查看'></a></button>"
+                        $.each(this.category,function(){
+                            category_html += "<a href='javascript:showLists(\""+this+"\")'>"+this+"</a> "
+                        })
+                        html += "<div class='blogList'>\n" +
+                            "        <h4 class='title'><a href='javascript:showDetail("+this.id+")'>"+this.title+"</a>" +
+                            "<div style='display: inline;float: right'>" +
+                            href_html +
+                            "<button class='btn btn-default btn-sm' onclick='goEdit("+this.id+")' ><img src='/assets/images/icons/pencil.svg' alt='编辑' width='15' height='15' title='编辑'></button>" +
+                            "<button class='btn btn-default btn-sm' onclick='del("+this.id+")'><img src='../assets/images/icons/archive-fill.svg' alt='删除' width='15' height='15' title='删除'></button></div>" +
+                            "</h4>\n" +
+                            "        <ul>\n" +
+                            "            <li class='truenameIcon'><span class='badge badge-light'>"+tag+"</span></li>\n" +
+                            "            <li class='truenameIcon'><span class='badge badge-light'>"+private+"</span></li>\n" +
+                            "            <li class='categoryIcon'>"+ category_html +"</li>\n" +
+                            // "            <li class='createdIcon'>"+this.update_at+"</li>\n" +
+                            "        </ul>\n" +
+                            "    </div>"
+                    })
+                    $("div.listsContent").empty();
+                    $("div.listsContent").append(html);
+
+                    $('#pagination').pagination({
+                        pageSize: limit,                            // 单页容量
+                        page: page,                                 // 当前页
+                        totalRows: result.data.total,                           // 总条数
+                        previous: '&laquo;',
+                        next: '&raquo;',
+                        debug: false,                           // 调试模式量默false
+                        onClickPage: function(){
+                            let targetPage = $(this).data('page'); //目标页
+                            showLists(categoryTitle,targetPage,limit);
+                        }                         // 分页按钮回调函数
+                    });
+                }
+            }
+        });
+    }
+    /*详情内容*/
+    function showDetail(id){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {'id':id},
+            url: "/web/blog/allDetail",
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: false,
+            success: function (result) {
+                if(result.error == 0){
+                    let html =  "<div class='col-md-12 text-center'>\n" +
+                        "            <h2><b>"+result.data.data.title+"</b></h2>\n" +
+                        "        </div><br/><br/>"
+                    html += "<div id='detailContent'><textarea style='display:none;'>"+result.data.data.original_content+"</textarea></div>";
+                    let comment_body = "";
+                    $.each(result.data.comment,function(){
+                        comment_body += "<div class='card-body'>\n" +
+                            "            <div class='row'>\n" +
+                            "                <div class='col-lg-1 col-1' style='text-align: center;padding: 0'>\n" +
+                            "                    <img style='width: 100%;max-width: 48px;' class='rounded-circle' src='"+this.avatar+"'>\n" +
+                            "                </div>\n" +
+                            "                <div class='col-lg-11 col-11'>\n" +
+                            "                    <div class='replyinfo'>\n" +
+                            "                        <ul>\n" +
+                            "                            <li class='truenameIcon'>昵称: "+this.nickname+"</li>\n" +
+                            "                            <li class='createdIcon'>时间: "+this.created_at+"</li>\n" +
+                            "                        </ul>\n" +
+                            "                    </div>\n" +
+                            "                    <div class=''>"+this.content+"</div>\n" +
+                            "                </div>\n" +
+                            "            </div>\n" +
+                            "        </div>"
+                    })
+
+                    let comment_add = "<div class='card-body'>\n" +
+                        "            <form action='' method='post'>\n" +
+                        "                <textarea id='firstComment' class='form-control' rows='4'></textarea>\n" +
+                        "                <div class='text-center'>\n" +
+                        "                    <button type='button' class='btn btn-secondary btn-sm' onclick='addComment()' style='margin-top:10px'>评论</button>\n" +
+                        "                </div>\n" +
+                        "            </form>\n" +
+                        "        </div>";
+                    let comment_content = "<div class='card'>\n" +
+                        "        <div class='card-header'>\n" +
+                        "            评论\n" +
+                        "        </div>"+ comment_add + comment_body + "</div>"
+                    html += comment_content;
+                    $("div.detailContent").empty();
+                    $("div.detailContent").append(html);
+                    editormd.markdownToHTML("detailContent",{
+                        htmlDecode      : "style,script,iframe",
+                        // emoji           : true,
+                        // taskList        : true,
+                        // tex             : true,  // 默认不解析
+                        // flowChart       : true,  // 默认不解析
+                        // sequenceDiagram : true  // 默认不解析
+                    })
+                    $("div.detailContent").data("id",id)
+                    // editorInit('firstComment')
+                }
+            }
+        });
+        //小屏
+        let screenWidth = document.body.clientWidth;
+        if(screenWidth < 768){
+            $(".listItem").addClass("d-none");
+            $(".detailItem").removeClass("d-none");
+            $("#ListSwitch").removeClass("d-none");
+        }
+    }
+    function OpenList(){
+        $(".listItem").removeClass("d-none");
+        $(".detailItem").addClass("d-none");
+        $("#ListSwitch").addClass("d-none");
+    }
+    /*搜搜*/
+    function Search(){
+        let categoryTitle = $(".list-group-item.active").data('categorytitle');
+        categoryTitle = (categoryTitle == '所有分类') ? '' : categoryTitle;
+        showLists(categoryTitle);
+    }
+
+    /*跳转编辑*/
+    function goEdit(id){
+        if (checkLogin()){
+            sessionStorage.setItem("edit_blog_id",id);
+            $(".mainContent").load("editblogpage.html");
+        }
+    }
+    /*删除*/
+    function del(id){
+        let cfm = confirm('确认删除?');
+        if(cfm == true){
+            $.ajax({
+                type: "get",
+                dataType: "json",
+                data: {'id':id},
+                url: "/web/blog/delete",
+                async: true,
+                beforeSend: function(request) {
+                    request.setRequestHeader("Token", getToken());
+                },
+                success: function (result) {
+                    if(result.error == 0){
+                        xTips(result.msg);
+
+                    }
+                }
+            })
+        }
+    }
+
+    function changeCategoryActive(categoryTitle){
+        $(".active").removeClass("active");
+        $("a[data-categoryTitle="+categoryTitle+"]").addClass("active")
+    }
+    /*评论*/
+    function addComment(){
+        let blog_id = $("div.detailContent").data("id");
+        let content = $("#firstComment").val();
+        if(content == '' || content==undefined){
+            xTips('评论不能为空');
+            return false;
+        }
+        $.ajax({
+            type:"post",
+            url:'/web/qa/addComment',
+            data:{"blog_id":blog_id,"content":content},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async:true,
+            dataType:"json",
+            success:function(result){
+                if(result.error == 0){
+                    xTips(result.msg);
+                    showDetail(blog_id);
+                }else{
+                    xTips(result.msg);
+                }
+            }
+        })
+    }
+    /*分类*/
+    function category(){
+        $(".category").load("personal/category.html");
+    }
+    /*列表*/
+    function lists(){
+        $(".lists").load("personal/lists.html");
+    }
+    /*详情*/
+    function detail(){
+        $(".detail").load("personal/detail.html");
+    }
+
+</script>

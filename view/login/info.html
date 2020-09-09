@@ -1,0 +1,37 @@
+<div class="card text-center">
+    <div class="card-header">
+        个人信息
+    </div>
+    <div class="card-body">
+        <img class='rounded-circle avatar' style="width: 80px;height:80px" src=''>
+        <p class="card-text nickname"></p>
+
+        <a href="javascript:logout()" class="btn-sm btn-outline-secondary">登出</a>
+    </div>
+</div>
+<script>
+    $(function(){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            url: "/web/user/info",
+            data: {},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: true,
+            success: function (result) {
+                if(result.error == 0){
+                    let html = result.data.nickname + " <img class='rounded-circle avatar' style='width: 28px;height:28px' src='" + result.data.avatar + "'>";
+                    $("#nameAndAvatar").empty();
+                    $("#nameAndAvatar").append(html);
+                    $("p.nickname").text(result.data.nickname);
+                    $(".avatar").attr('src',result.data.avatar);
+                }else{
+                    alert(result.msg);
+                    logout()
+                }
+            }
+        });
+    })
+</script>

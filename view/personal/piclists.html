@@ -1,0 +1,152 @@
+<style type="text/css">
+    .preview>img{
+        margin-bottom: 5px;
+        margin-right: 5px;
+        height: 100px
+    }
+    .imgList>.xm-img>img{
+        margin: 8px 6px 8px 10px;
+        vertical-align: bottom;
+        height: 100px
+    }
+    .xm-img{
+        display: inline;
+        position: relative;
+        height: 100px;
+    }
+    .xm-img:hover{
+        cursor: zoom-in;
+    }
+    .xm-img-handle{
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 3;
+    }
+    .img-down{
+        background-image: linear-gradient(to right,#17e66c,#10c55b);
+        position: absolute;
+        bottom: 5px;
+        width: 80%;
+        left: 10%;
+        text-align: center;
+        border-radius: 4px;
+        cursor: pointer;
+        display: inline-block;
+        color: white;
+        height: 20px;
+        line-height: 20px;
+    }
+    .xm-view-box{
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000;
+    }
+    .xm-view-box .xm-img-box{
+        position: absolute;top: 0; left: 0; right: 0; bottom: 0; line-height: 0; background-color: rgba(0,0,0,.8); overflow: auto;
+    }
+    .xm-view-box .xm-img-box .image{
+        position: absolute; transition: all .2s; cursor: zoom-out;
+    }
+</style>
+<div class="detailContent">
+    <div class="card">
+        <h5 class="card-header">图片上传</h5>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-1" style="text-align: center">
+                    <input type="file" onchange="preview(this)" class="d-none" id="logo" multiple accept="image/gif,image/jpeg,image/png,image/jpg" placeholder="logo">
+                    <img border="0"  src="http://head.xxroom.xyz/photo_icon.png" onclick="$('#logo').click()">
+                    <button class="btn btn-sm btn-primary" onclick="qn_upload()" style="margin-top: 10px">上传图片</button>
+                </div>
+                <div class="col-lg-11 preview"></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h5 class="card-header">我的图片</h5>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-12 imgList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        showLists();
+    })
+    var center = {
+        init:function(){
+            let clipboard = new ClipboardJS('.js-copy');//实例化
+            /*鼠标停留图片上*/
+            $(".xm-img").mouseover(function(){
+                let handle = $(this).children('.xm-img-handle');
+                let bg = $(this).children('.xm-img-bg');
+                bg.css('opacity',0.4);
+                handle.css("display","inline");
+            });
+            /*鼠标离开图片*/
+            $(".xm-img").mouseleave(function(){
+                let handle = $(this).children('.xm-img-handle');
+                let bg = $(this).children('.xm-img-bg');
+                bg.css('opacity',0);
+                handle.css("display","none");
+            });
+            $(".xm-img").on('click',function (e) {
+                if(e.originalEvent.target.parentNode.className == 'img-down js-copy'){return;}
+                var url = $(this).children('img').attr('src');
+                var img = new Image();
+                img.src = url;
+                //图片宽-高-比列
+                let w = img.width,h = img.height;
+                let p = w/h;
+                //屏幕宽-高-比例
+                let sw = document.body.clientWidth,sh = document.body.clientHeight;
+                let sp = sw/sh;
+
+                let lw = 0,lh = 0;
+                //宽大于高，则以宽为基准（暂时）0.8只是个基数，可以取值0-1以内数
+                if(w>=h){
+                    if(p/sp <= 0.8 && w>=sw*0.8){
+                        lh = sh*0.8;
+                        lw = lh*p;
+                    }else{
+                        lw = Math.min(sw*0.8,w);
+                        lh = lw/p;
+                    }
+                }else{
+                    if(sp/p <= 0.8 && h>=sh*0.8){
+                        lw = sw*0.8;
+                        lh = lw/p;
+                    }else{
+                        lh = Math.min(sh*0.8,h);
+                        lw = lh*p;
+                    }
+                }
+
+                let left = right = (sw - lw)/2;
+                let top = (sh - lh)/2;
+                var imgStyle = 'width:'+lw+'px;height:'+lh+'px;left:'+left+'px;right:'+right+'px;top:'+top+'px;';
+                let html = "<div class='xm-view-box'><div class='xm-img-box'><img class='image' style='"+imgStyle+"' src='"+url+"'></div></div>";
+                $("body").append(html);
+                $(".xm-view-box").on('click',function(){
+                    $(this).remove();
+                })
+            });
+            /*下载图片*/
+            /*$(".img-down").on('click',function(e){
+                e.stopPropagation();
+                var img_url = $(this).data('url');
+                window.location.href = "/upload/download_pic?url="+img_url;
+            })*/
+            $(".img-down").on('click',function(e){
+                // e.stopPropagation();
+                // var img_url = $(this).data('url');
+                // window.location.href = "/upload/download_pic?url="+img_url;
+            });
+
+        }
+    };
+</script>

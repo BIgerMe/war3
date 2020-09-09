@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="/assets/js/Common.js"></script>
+<!--<link rel="stylesheet" href="/assets/kindedit/themes/default/default.css">-->
+<!--<script src="/assets/kindedit/kindeditor-all-min.js"></script>-->
+<!--<script charset="utf-8" src="/assets/kindedit/lang/zh-CN.js"></script>-->
+
+<link rel="stylesheet" href="/assets/editormd/css/editormd.css" />
+<script src="/assets/editormd/lib/marked.min.js"></script>
+<script src="/assets/editormd/lib/prettify.min.js"></script>
+<script src="/assets/editormd/lib/raphael.min.js"></script>
+<script src="/assets/editormd/lib/underscore.min.js"></script>
+<script src="/assets/editormd/lib/sequence-diagram.min.js"></script>
+<script src="/assets/editormd/lib/flowchart.min.js"></script>
+<script src="/assets/editormd/lib/jquery.flowchart.min.js"></script>
+<script src="/assets/editormd/editormd.js"></script>
+<style type="text/css">
+    /*三个页面都有效果*/
+    a{
+        color: #3354AA;
+    }
+    a:hover{
+        text-decoration: none;
+    }
+    @media (min-width: 992px) {
+        .categoryStyle,.listsStyle{
+            position:fixed;
+        }
+    }
+</style>
+<div class="row" style="margin: 3vh 0 0 0 ">
+    <div class="col-lg-1 col-3 categoryStyle cateItem d-none d-lg-block" style="overflow: scroll;height:100%">
+        <div class="category"></div>
+    </div>
+    <div class="col-lg-2 offset-lg-1 col-12 listsStyle listItem" style="overflow: scroll;height:100%">
+        <div class="lists"></div>
+    </div>
+    <div class="col-lg-8 offset-lg-3 col-12 detailItem">
+        <div class="detail"></div>
+    </div>
+    <div class="col-lg-1 offset-lg-11 offset-10 col-2 d-none d-lg-block" style="position:fixed;">
+        <button class="btn btn-sm btn-light left" id="shrink" style="font-size:25px;border: 0px;box-shadow:0 0 0 0 " onclick="javascript:shrink(this);">
+            <img style="width:22px" src="/assets/images/icons/arrows-fullscreen.svg">
+        </button>
+        <button class="btn btn-sm btn-light left" style="font-size:25px;border: 0px;box-shadow:0 0 0 0 " onclick="javascript:window.scrollTo(0,0);">
+            <img style="width: 25px" src="/assets/images/icons/arrow-bar-up.svg">
+        </button>
+    </div>
+</div>
+
+<script>
+    $(function(){
+        category();
+        lists();
+        detail();
+    })
+    /*显示博客列表*/
+    function showLists(categoryId=0,page=1,limit=10){
+        let key = $("#key").val();
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {'key':key,'categoryId':categoryId,'page':page,'limit':limit},
+            url: "/web/qa/lists",
+            async: true,
+            success: function (result) {
+                if(result.error == 0){
+                    let html = '<div id="pagination"></div>\n';
+                    $.each(result.data.data,function(){
+                        let category_html = '';
+                        let href_html = this.private == 0 ? "" :
+                            "<div style='display: inline;float: right'><button class='btn btn-default btn-sm'><a href='blogview.html?id="+this.id+"' target='_blank'>" +
+                            "<img src='../assets/images/icons/cursor.svg' alt='查看' width='15' height='15' title='查看'></a></button></div>"
+                        $.each(this.category,function(){
+                            category_html += "<a href='javascript:showLists("+this.id+")'>"+this.title+"</a> "
+                        })
+                        html += "<div class='blogList'>\n" +
+                            "        <h4 class='title'><a href='javascript:showDetail("+this.id+")'>"+this.title+"</a>"+href_html+"</h4>\n" +
+                            "        <ul>\n" +
+                            "            <li class='truenameIcon'>作者: "+this.nickname+"</li>\n" +
+                            "            <li class='categoryIcon'>分类: "+category_html+"</li>\n" +
+                            "            <li class='createdIcon'>时间: "+this.created_at+"</li>\n" +
+                            "        </ul>\n" +
+                            "    </div>"
+                    })
+                    $("div.listsContent").empty();
+                    $("div.listsContent").append(html);
+
+                    $('#pagination').pagination({
+                        pageSize: limit,                            // 单页容量
+                        page: page,                                 // 当前页
+                        totalRows: result.data.total,                           // 总条数
+                        previous: '&laquo;',
+                        next: '&raquo;',
+                        debug: false,                           // 调试模式量默false
+                        onClickPage: function(){
+                            let targetPage = $(this).data('page'); //目标页
+                            showLists(categoryId,targetPage,limit);
+                        }                         // 分页按钮回调函数
+                    });
+                }
+            }
+        });
+    }
+    /*问答内容*/
+    function showDetail(id){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {'id':id},
+            url: "/web/blog/publicDetail",
+            async: true,
+            success: function (result) {
+                if(result.error == 0){
+                    let html =  "<div class='col-md-12 text-center'>\n" +
+                        "            <h2><b>"+result.data.data.title+"</b></h2>\n" +
+                        "        </div><br/><br/>"
+                    html += "<div id='detailContent'><textarea style='display:none;'>"+result.data.data.original_content+"</textarea></div>";
+                    let comment_body = "";
+                    $.each(result.data.comment,function(){
+                        comment_body += "<div class='card-body'>\n" +
+                            "            <div class='row'>\n" +
+                            "                <div class='col-lg-1 col-2' style='text-align: center'>\n" +
+                            "                    <img style='width: 48px;' class='rounded-circle' src='"+this.avatar+"'>\n" +
+                            "                </div>\n" +
+                            "                <div class='col-lg-10 col-9'>\n" +
+                            "                    <div class='replyinfo'>\n" +
+                            "                        <ul>\n" +
+                            "                            <li class='truenameIcon'>昵称: "+this.nickname+"</li>\n" +
+                            "                            <li class='createdIcon'>时间: "+this.created_at+"</li>\n" +
+                            "                        </ul>\n" +
+                            "                    </div>\n" +
+                            "                    <div class=''>"+this.content+"</div>\n" +
+                            "                </div>\n" +
+                            "            </div>\n" +
+                            "        </div>"
+                    })
+                    let comment_add = "<div class='card-body'>\n" +
+                        "            <form action='' method='post'>\n" +
+                        "                <textarea id='firstComment' class='form-control' rows='4'></textarea>\n" +
+                        "                <div class='text-center'>\n" +
+                        "                    <button type='button' class='btn btn-secondary btn-sm' onclick='addComment()' style='margin-top:10px'>评论</button>\n" +
+                        "                </div>\n" +
+                        "            </form>\n" +
+                        "        </div>";
+                    let comment_content = "<div class='card'>\n" +
+                        "        <div class='card-header'>\n" +
+                        "            评论\n" +
+                        "        </div>"+ comment_add + comment_body + "</div>"
+                    html += comment_content;
+                    $("div.detailContent").empty();
+                    $("div.detailContent").append(html);
+                    editormd.markdownToHTML("detailContent",{
+                        htmlDecode      : "style,script,iframe",
+                        emoji           : true,
+                        taskList        : true,
+                        tex             : true,  // 默认不解析
+                        flowChart       : true,  // 默认不解析
+                        sequenceDiagram : true  // 默认不解析
+                    })
+                    $("div.detailContent").data("id",id)
+                    // editorInit('firstComment')
+                }
+            }
+        });
+    }
+    /*搜搜*/
+    function Search(){
+        let categoryId = $(".list-group-item.active").data('id');
+        showLists(categoryId);
+    }
+    /*分类选中高亮*/
+    function changeCategoryActive(id=0){
+        let categoryClass = 'category_'+id;
+        $(".list-group-item").removeClass("active");
+        $("."+categoryClass).addClass("active")
+    }
+
+    /*评论*/
+    function addComment(){
+        let blog_id = $("div.detailContent").data("id");
+        let content = $("#firstComment").val();
+        if(content == '' || content==undefined){
+            alert('评论不能为空');
+            return false;
+        }
+        $.ajax({
+            type:"post",
+            url:'/web/qa/addComment',
+            data:{"blog_id":blog_id,"content":content},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async:true,
+            dataType:"json",
+            success:function(result){
+                if(result.error == 0){
+                    alert(result.msg);
+                    showDetail(blog_id);
+                }else{
+                    alert(result.msg);
+                }
+            }
+        })
+    }
+    /*个人信息页*/
+    function category(){
+        $(".category").load("qa/category.html");
+    }
+    /*登录页*/
+    function lists(){
+        $(".lists").load("qa/lists.html");
+    }
+    /*注册页*/
+    function detail(){
+        $(".detail").load("qa/detail.html");
+    }
+</script>

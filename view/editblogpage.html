@@ -1,0 +1,149 @@
+
+<link rel="stylesheet" href="//apps.bdimg.com/libs/jqueryui/1.10.4/css/jquery-ui.min.css">
+<link rel="stylesheet" href="/assets/editormd/css/editormd.css" />
+
+<!--<script type="text/javascript" src="/assets/js/lib/marked-new.js"></script>-->
+<!--<script src="//apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js"></script>-->
+<script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+<script src="/assets/editormd/editormd.min.js"></script>
+<style type="text/css">
+
+    .input-sm {
+        height: 30px;
+        padding: 5px 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        border-radius: 3px;
+    }
+    .row{
+        margin: 20px 10px 20px 10px;
+    }
+    .input {
+        padding-bottom: 20px;
+    }
+</style>
+<div class="row" style="min-height: 85vh">
+    <div class="col-lg-2" style="position: fixed">
+        <div class="card">
+            <div class="card-header">
+                新增
+            </div>
+            <div class="card-body" style="padding: 0.5rem">
+                <div class="col-12 input">
+                    <span><b>标题:</b></span>&nbsp;&nbsp;&nbsp;
+                    <input class="input-sm" id="title" type="text" placeholder="title" autocomplete="off" />
+                </div>
+                <div class="col-12 input">
+                    <span><b>标签:</b></span>&nbsp;&nbsp;&nbsp;
+                    <input class="input-sm" id="category" type="text" placeholder="category" />
+                    <span style="color: #ff420f">&emsp;多个分类以半角'逗号'隔开,如: php,java(最多两个标签,每个标签不超过12个字母或不超过6个汉字)</span>
+                </div>
+                <div class="col-md-12 input">
+                    <span><b>分类:</b></span>&nbsp;&nbsp;&nbsp;
+                    <select id="tag" class="form-control input-sm" style="width: 160px;display: inline">
+                        <option value="0">博客</option>
+                    </select>
+                </div>
+                <div class="col-md-12 input">
+                    <span><b>权限:</b></span>&nbsp;&nbsp;&nbsp;
+                    <select id="private" class="form-control input-sm" style="width: 160px;display: inline">
+                        <option value="0">私有</option>
+                        <option value="1">公开</option>
+                    </select>
+                </div>
+                <div class="col-md-12 text-center" style="margin-top: 20px">
+                    <button type="button" class="btn btn-primary" onclick="submit()">提交</button>&nbsp;&nbsp;&nbsp;
+                    <button type="button" class="btn btn-secondary" onclick="javascript:gopersonalblogpage()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-10 offset-lg-2">
+        <div id="editor">
+            <textarea style="display:none;"></textarea>
+        </div>
+    </div>
+</div>
+</html>
+<script type="text/javascript">
+    var blogId = sessionStorage.getItem('edit_blog_id');
+    var editor = editormd("editor", {
+        // width  : "100%",
+        // height : "100%",
+        codeFold : true,
+        watch: true,
+        path   : "/assets/editormd/lib/",
+        htmlDecode:  "iframe|on*",
+        // tex : true,                   // 开启科学公式TeX语言支持，默认关闭
+        flowChart : true,             // 开启流程图支持，默认关闭
+        sequenceDiagram : true,       // 开启时序/序列图支持，默认关闭,
+        // autoHeight : true,
+        imageUpload    : true,
+        imageFormats   : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+        // imageUploadURL : "",
+    });
+    $(function() {
+        editInit(blogId);
+    });
+    /*初始化数据*/
+    function editInit(id){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            url: "/web/blog/editBlogInfo",
+            data: {id:id},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: false,
+            success: function (result) {
+                if(result.error == 0){
+                    $("#title").val(result.data.title);
+                    $("#category").val(result.data.category);
+                    $("#tag").val(result.data.tag);
+                    $("#private").val(result.data.private);
+                    if(result.data.original_content){
+                        $("#editor textarea").val(result.data.original_content);
+                    }else{
+                        $("#editor textarea").val(result.data.content);
+                    }
+                    // $("#html").html(result.data.content);
+                }else{
+                    xTips(result.msg);
+                }
+            }
+        });
+    }
+
+    function submit(){
+        let markdown = editor.getMarkdown();
+        let id = blogId;
+        let title = $("#title").val();
+        let category = $("#category").val();
+        let tag = $("#tag").val();
+
+        let original_content = markdown;
+        let private = $("#private").val();
+        $.ajax({
+            type: "post",
+            dataType: "json",
+            url: "/web/blog/editBlog",
+            data: {id:id,title:title,category:category,tag:tag,original_content:original_content,private:private},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: true,
+            success: function (result) {
+                console.log(result);
+                if(result.error == 0){
+                    xTips(result.msg);
+                    setTimeout(function(){
+                        // window.location.href = '/view/personalblogpage.html';
+                    },1000);
+                }else{
+                    xTips(result.msg);
+                }
+            }
+        });
+    }
+</script>

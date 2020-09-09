@@ -1,0 +1,163 @@
+
+<script type="text/javascript" src="../assets/js/lib/clipboard.min.js"></script>
+
+<div class="container-fluid">
+    <div class="row" style="margin: 3vh 0 0 0 ">
+        <div class="col-lg-1 col-12" >
+            <div class="category"></div>
+        </div>
+        <div class="col-lg-10 col-12">
+            <div class="lists">
+            </div>
+        </div>
+        <!--<div class="col-lg-1 offset-lg-11" style="position:fixed;">-->
+    </div>
+</div>
+
+<script>
+    var Files = [] ;
+    $(function(){
+        category();
+        lists();
+    })
+    /*显示图片列表*/
+    function showLists() {
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {},
+            url: "/web/img/personalLists",
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: true,
+            success: function (result) {
+                if(result.error ==0){
+                    $.each(result.data,function () {
+                        let img = "<div class='xm-img'><img src='"+this.path+"'>\n" +
+                            "<div class='xm-img-handle'>\n" +
+                            "<div class='img-down js-copy' data-clipboard-text='"+this.path+"' data-url='"+this.path+"'><span>复制链接</span></div></div>";
+                        $(".imgList").append(img);
+                    })
+                    center.init();
+                }
+            }
+        })
+    }
+    function preview(e) {
+        //为文件读取成功设置事件
+
+        var fileInput = $(e);
+        // var file = fileInput[0].files[0];
+        //创建读取文件的对象
+        $.each(fileInput[0].files,function(i,v){
+            let reader = new FileReader();
+            reader.onload = function (e) {
+                let imgFile = e.target.result;
+                let exist = false;
+                $(".preview>img").each(function(){
+                   if($(this).attr('src') == imgFile){
+                       exist = true;
+                       return true;
+                   }
+                });
+                if(exist){
+                    return true;
+                }
+                let img = "<img src='"+imgFile+"'>"
+                $(".preview").append(img);
+                Files.push(v);
+            };
+            //创建文件读取相关的变量
+            reader.readAsDataURL(v);
+        })
+    }
+    function qn_upload(){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            url: "/web/img/qiniuToken",
+            data: {},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async: false,
+            success: function (result) {
+                token = result.data.token;
+            }
+        });
+        if(!token){
+            alert('token获取失败');return false;
+        }
+
+        var file = Files;
+        //多图片上传
+        //网络协议
+        var protocolStr = document.location.protocol;
+        var url = (protocolStr == 'http:') ? 'http://up.qiniup.com' : 'https://up.qbox.me';
+
+        for (let i=0;i<file.length;i++){
+            var form = new FormData();
+            form.append('file',file[i]);
+            form.append('token',token);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType:'json',
+                contentType: false,
+                processData: false,
+                data: form,
+                success: function (rst) {
+                    let img = "http://head.xxroom.xyz/" + rst.key;
+                    let state = add_attachment(img,file[i].size);
+                    if(state == true){
+                        console.log(file[i].name+'上传成功');
+                    }
+                    console.log(file[i].name+'上传失败');
+                    return true;
+                },
+                error: function () {
+                    console.log(file[i].name+'上传失败');
+                    return true;
+                }
+            });
+        }
+        alert('上传完成');
+        setTimeout(function () {
+            // window.location.reload()
+        },1000)
+    }
+
+    //增加附件
+    function add_attachment(path,size){
+        let url = '/web/img/addAttachment';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            dataType:'json',
+            async:false,
+            data: {path:path,size:size},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            success: function (rst) {
+                if(rst.error == 0){
+                    console.log('上传成功')
+                    return true;
+                }
+                return false;
+            },
+            error: function () {
+                return false;
+            }
+        });
+    }
+    /*分类*/
+    function category(){
+        $(".category").load("personal/piccategory.html");
+    }
+    /*详情*/
+    function lists(){
+        $(".lists").load("personal/piclists.html");
+    }
+</script>

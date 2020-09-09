@@ -1,0 +1,39 @@
+<style type="text/css">
+    .blogList>ul{
+        padding-left: 0px;
+        font-family: "Droid Serif",Georgia,"Times New Roman","PingFang SC","Hiragino Sans GB","Source Han Sans CN","WenQuanYi Micro Hei","Microsoft Yahei",serif;
+        color: #999;
+        font-size: .8em;
+    }
+    .blogList>.title{
+        font-size: 1.2rem;
+    }
+
+    /*三个页面都有效果*/
+    a{
+        color: #3354AA;
+    }
+    a:hover{
+        text-decoration: none;
+    }
+    .categoryIcon,.truenameIcon, .createdIcon,.viewIcon{
+        margin:0 8px 0 0;
+        display: inline;
+    }
+    .categoryIcon,.createdIcon,.viewIcon{
+        padding-left: 8px;
+        border-left: 1px solid #EEE
+    }
+</style>
+<div class="input-group mb-3">
+    <input type="text" class="form-control" id="key" placeholder="关键词">
+    <div class="input-group-append">
+        <button class="btn btn-outline-primary" type="button" onclick="Search()">搜搜</button>
+    </div>
+</div>
+<div class="listsContent"></div>
+<script>
+    $(function(){
+        showLists();
+    })
+</script>

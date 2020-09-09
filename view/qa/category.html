@@ -1,0 +1,35 @@
+<style type="text/css">
+    .categoryLists>.list-group-item{
+        font-family: "Droid Serif",Georgia,"Times New Roman","PingFang SC","Hiragino Sans GB","Source Han Sans CN","WenQuanYi Micro Hei","Microsoft Yahei",serif;
+        font-size: 0.9rem;
+        padding: 0.17rem 0.15rem;
+        border:0px
+    }
+</style>
+<div class="list-group categoryLists">
+    <a href="javascript:showLists();" onclick="changeCategoryActive()" data-id='0' class="category_0 list-group-item list-group-item-action active">
+        所有分类
+    </a>
+</div>
+
+<script>
+    $(function(){
+        $.ajax({
+            type: "get",
+            dataType: "json",
+            data: {'tag':0},
+            url: "/web/qa/category",
+            async: true,
+            success: function (result) {
+                if(result.error == 0){
+                    let html = '';
+                    $.each(result.data,function(){
+                        let category_class = "category_" + this.id;
+                        html += '<a href="javascript:showLists('+this.id+')" onclick="changeCategoryActive('+this.id+')" data-id='+this.id+' class=" '+category_class+' list-group-item">'+this.title+'</a>\n'
+                    })
+                    $("div.categoryLists").append(html);
+                }
+            }
+        });
+    })
+</script>

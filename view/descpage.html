@@ -1,0 +1,63 @@
+<!--<script type="text/javascript" src="/assets/js/Common.js"></script>-->
+
+<link rel="stylesheet" href="/assets/editormd/css/editormd.css" />
+<script src="/assets/editormd/lib/marked.min.js"></script>
+<script src="/assets/editormd/lib/prettify.min.js"></script>
+<script src="/assets/editormd/lib/raphael.min.js"></script>
+<script src="/assets/editormd/lib/underscore.min.js"></script>
+<script src="/assets/editormd/lib/sequence-diagram.min.js"></script>
+<script src="/assets/editormd/lib/flowchart.min.js"></script>
+<script src="/assets/editormd/lib/jquery.flowchart.min.js"></script>
+<script src="/assets/editormd/editormd.js"></script>
+<style type="text/css">
+    @media (min-width: 992px) {
+        .categoryStyle,.listsStyle{
+            position:fixed;
+        }
+    }
+</style>
+<div class="row" style="margin: 3vh 0 0 0 ">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="detail"></div>
+    </div>
+</div>
+
+<script>
+    $(function(){
+        detail();
+    })
+
+
+    /*评论*/
+    function addComment(){
+        let blog_id = $("div.detailContent").data("id");
+        let content = $("#firstComment").val();
+        if(content == '' || content==undefined){
+            alert('评论不能为空');
+            return false;
+        }
+        $.ajax({
+            type:"post",
+            url:'/web/qa/addComment',
+            data:{"blog_id":blog_id,"content":content},
+            beforeSend: function(request) {
+                request.setRequestHeader("Token", getToken());
+            },
+            async:true,
+            dataType:"json",
+            success:function(result){
+                if(result.error == 0){
+                    alert(result.msg);
+                    showDetail(blog_id);
+                }else{
+                    alert(result.msg);
+                }
+            }
+        })
+    }
+
+    /*注册页*/
+    function detail(){
+        $(".detail").load("desc/detail.html");
+    }
+</script>
