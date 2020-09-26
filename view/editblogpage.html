@@ -6,6 +6,8 @@
 <!--<script src="//apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js"></script>-->
 <script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 <script src="/assets/editormd/editormd.min.js"></script>
+<script src="/assets/js/lib/uploadImg.js"></script>
+
 <style type="text/css">
 
     .input-sm {
@@ -81,6 +83,9 @@
         imageUpload    : true,
         imageFormats   : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
         // imageUploadURL : "",
+        onload:function(){
+            initPasteDragImg(this);
+        }
     });
     $(function() {
         editInit(blogId);

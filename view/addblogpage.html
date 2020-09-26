@@ -5,6 +5,7 @@
 <!--<script src="//apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js"></script>-->
 <script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 <script src="/assets/editormd/editormd.min.js"></script>
+<script src="/assets/js/lib/uploadImg.js"></script>
 
 <style type="text/css">
     .input-sm {
@@ -54,7 +55,7 @@
                 </div>
                 <div class="col-md-12 text-center" style="margin-top: 20px">
                     <button type="button" class="btn btn-primary" onclick="submit()">提交</button>&nbsp;&nbsp;&nbsp;
-                    <button type="button" class="btn btn-secondary" onclick="javascript:gopersonalblogpage()">取消</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href = '/view/personalblogpage.html';">取消</button>
                 </div>
             </div>
         </div>
@@ -79,6 +80,9 @@
         imageUpload    : true,
         imageFormats   : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
         // imageUploadURL : "/web/qiniu/fileUpload",
+        onload:function(){
+            initPasteDragImg(this);
+        }
     });
 
     function submit(){
